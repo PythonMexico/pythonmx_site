@@ -1,0 +1,23 @@
+; Based on https://github.com/hannosch/zope2-wsgi/blob/master/templates/zope.ini
+
+[app:plone]
+use = egg:Zope2#main
+zope_conf = ${plone:location}/etc/zope.conf
+
+[filter:auth]
+use = egg:repoze.who#config
+config_file = ${buildout:directory}/etc/auth.ini
+
+[pipeline:main]
+pipeline =
+    egg:WebError#evalerror
+    auth
+    egg:repoze.retry#retry
+    egg:repoze.tm2#tm
+    egg:repoze.vhm#vhm_xheaders
+    plone
+
+[server:main]
+use = egg:paste#http
+host = ${hosts:plone}
+port = ${ports:plone}
