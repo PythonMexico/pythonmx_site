@@ -2,7 +2,7 @@
 
 [app:plone]
 use = egg:Zope2#main
-zope_conf = ${plone:location}/etc/zope.conf
+zope_conf = ${buildout:directory}/etc/zope.conf
 
 [filter:auth]
 use = egg:repoze.who#config
