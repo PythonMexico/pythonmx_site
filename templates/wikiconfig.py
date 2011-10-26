@@ -53,7 +53,7 @@ class PloneAuth(BaseAuth):
                     request, auth_username=user.uid,
                     auth_method=self.name,
                     auth_attribs=('name', 'aliasname', 'email', 'password'))
-            user.may = PlonePermissions(user)
+            #user.may = PlonePermissions(user)
             user.language = 'es'
             user.valid = 1
             return user, True
@@ -66,7 +66,7 @@ class Config(multiconfig.DefaultConfig):
     instance_dir = '/Users/erik/Develop/pythonmx_site/var/wiki'
     data_dir = os.path.join(instance_dir, 'data', '') # path with trailing /
     data_underlay_dir = os.path.join(instance_dir, 'underlay', '') # path with trailing /
-    #url_prefix_static = '/mywiki' + url_prefix_static
+    url_prefix_static = '/wiki' + url_prefix_static
 
     sitename = u'PythonMexico'
     logo_string = u'<img src="%s/common/moinmoin.png" alt="MoinMoin Logo">' % url_prefix_static
@@ -89,7 +89,7 @@ class Config(multiconfig.DefaultConfig):
 
     show_hosts = 1
     
-    superuser = []
+    superuser = ['admin',]
 
     # Enable graphical charts, requires gdchart.
     #chart_options = {'width': 600, 'height': 300}
