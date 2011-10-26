@@ -41,9 +41,10 @@ http {
          gzip_disable “MSIE [1-6].(?!.*SV1)”;
          
         #Paginas de errores
-        error_page   500 502 503 504  /chin.html;
-        location = /chin.html {
-            root ${buildout:directory}/static/chin.html;
+        error_page   500 502 503 504  /tomala/barbon.html;
+        location ~ ^/tomala/(.*)$ {
+            alias ${buildout:directory}/static/$1;
+            index index.html;
         }
         
         #Wiki de moin-moin
