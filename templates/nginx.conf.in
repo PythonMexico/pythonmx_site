@@ -14,57 +14,57 @@ http {
                       '"$http_user_agent" "$http_x_forwarded_for"';
 
     sendfile        on;
-
     keepalive_timeout  65;
 
-    gzip  on;
-
-    gzip_comp_level 2;
-          gzip_proxied    any;
-          gzip_types      text/plain text/css application/x-javascript text/xml application/xml application/xml+rss text/javascript;
-
-    upstream plone-site {
-        server 127.0.0.1:5002;
+    upstream plone-backend {
+        server 127.0.0.1:${ports:plone};
     }
 
     server {
         listen       ${ports:nginx};
-        server_name  ${hosts:site};
-
-        client_max_body_size 100M;
-        client_body_buffer_size 100M;
-
-        location / {
-            #uwsgi_pass unix:${plone-settings:uwsgi-socket};
-            #include uwsgi_params;
-            #uwsgi_param UWSGI_SCRIPT wsgi;
-
-            proxy_set_header        Host $host;
-            proxy_set_header        X-Real-IP $remote_addr;
-            proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header        X-Forwarded-Proto $scheme;
-            client_max_body_size    10m;
-            client_body_buffer_size 128k;
-            proxy_connect_timeout   60s;
-            proxy_send_timeout      90s;
-            proxy_read_timeout      90s;
-            proxy_buffering         off;
-            proxy_temp_file_write_size 64k;
-            proxy_pass http://plone-site;
-            proxy_redirect          off;
-
-        }
-
-        error_page   500 502 503 504  /50x.html;
-        location = /50x.html {
-            root   html;
+        server_name  ${site:main-domain} ${site:alt-domains};
+        
+        #GZip
+         # See http://tumblelog.jauderho.com/post/27655495/gzip-compression-with-nginx
+         gzip             on;
+         gzip_http_version 1.1;
+         gzip_vary on;
+         gzip_comp_level 9; #MAX COMPRESSION FOR HTTP Clients!
+         gzip_min_length  512;
+         gzip_proxied     any;
+         gzip_types text/plain text/html text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+         # make sure gzip does not lose large gzipped js or css files
+         # see http://blog.leetsoft.com/2007/7/25/nginx-gzip-ssl
+         gzip_buffers 16 8k;
+     
+         # Disable gzip for certain browsers.
+         gzip_disable “MSIE [1-6].(?!.*SV1)”;
+         
+        #Paginas de errores
+        error_page   500 502 503 504  /chin.html;
+        location = /chin.html {
+            root ${buildout:directory}/static/chin.html;
         }
         
+        #Wiki de moin-moin
         location /wiki {
             include uwsgi_params;
             uwsgi_param SCRIPT_NAME /wiki;
             uwsgi_modifier1 30;
             uwsgi_pass unix:${moin-settings:uwsgi-socket};
+        }
+        
+        #Finalmente, plone para todo lo demas
+        location / {
+            #uwsgi_pass unix:${plone-settings:uwsgi-socket};
+            #include uwsgi_params;
+            #uwsgi_param UWSGI_SCRIPT wsgi;
+            
+            rewrite ^/(.*)$ /VirtualHostBase/http/$host:${ports:nginx}/${plone-settings:instance-name}/VirtualHostRoot/$1 break;
+            proxy_set_header  Host            $host;
+            proxy_set_header  X-Real-IP       $remote_addr;
+            proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_pass http://plone-backend;
         }
     }
 }
